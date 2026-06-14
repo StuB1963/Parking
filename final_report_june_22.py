@@ -2,8 +2,6 @@
 import pandas as pd
 from datetime import datetime, date
 import os
-import smtplib
-from email.mime.text import MIMEText
 
 BASE = "/Users/stuartbanham/Parking"
 CSV_FILE = f"{BASE}/johnson_week.csv"
@@ -14,32 +12,10 @@ LOG_FILE = f"{BASE}/logs/final_report.log"
 START = date(2026, 6, 15)
 END   = date(2026, 6, 21)
 
-# Email settings (iCloud SMTP)
-SMTP_SERVER = "smtp.mail.me.com"
-SMTP_PORT = 587
-FROM_EMAIL = "sbanham1@icloud.com"
-TO_EMAIL = "sbanham1@icloud.com"
-APP_PASSWORD = "YOUR-ICLOUD-APP-PASSWORD"   # replace with your real app password
-
 def log(msg):
     ts = datetime.now().isoformat()
     with open(LOG_FILE, "a") as f:
         f.write(f"{ts} - {msg}\n")
-
-def send_email(body):
-    msg = MIMEText(body)
-    msg["Subject"] = "Final Johnson Street Parking Report (June 15–21)"
-    msg["From"] = FROM_EMAIL
-    msg["To"] = TO_EMAIL
-
-    try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(FROM_EMAIL, APP_PASSWORD)
-            server.sendmail(FROM_EMAIL, [TO_EMAIL], msg.as_string())
-        log("SUCCESS: Email sent.")
-    except Exception as e:
-        log(f"ERROR sending email: {e}")
 
 def main():
     if not os.path.exists(CSV_FILE):
@@ -83,8 +59,8 @@ def main():
     with open(REPORT_FILE, "w") as f:
         f.write(report_text)
 
-    send_email(report_text)
-    log("SUCCESS: Final report generated and emailed.")
+    log("SUCCESS: Final report generated.")
 
 if __name__ == "__main__":
     main()
+
