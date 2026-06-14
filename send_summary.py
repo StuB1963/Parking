@@ -11,28 +11,28 @@ def generate_summary():
     wb = load_workbook(EXCEL_PATH)
     ws = wb.active
 
-    spaces = []
+    today = datetime.now().strftime("%Y-%m-%d")
+    avail = []
+    pct = []
+
     for row in ws.iter_rows(min_row=2, values_only=True):
-        timestamp, available, pct = row
-        date_str = timestamp.split(" ")[0]
-        if date_str == datetime.now().strftime("%Y-%m-%d"):
-            spaces.append((available, pct))
+        timestamp, available, pct_val, *_ = row
+        if timestamp.startswith(today):
+            avail.append(available)
+            pct.append(pct_val)
 
-    if not spaces:
+    if not avail:
         return "No data collected today."
-
-    avail_values = [s[0] for s in spaces]
-    pct_values = [s[1] for s in spaces]
 
     summary = f"""
 Daily Parking Summary — Johnson Street Parkade
-Date: {datetime.now().strftime("%Y-%m-%d")}
+Date: {today}
 
-Total Readings: {len(spaces)}
-Minimum Available: {min(avail_values)}
-Maximum Available: {max(avail_values)}
-Average Available: {sum(avail_values)/len(avail_values):.2f}
-Average Capacity %: {sum(pct_values)/len(pct_values):.2f}%
+Total Readings: {len(avail)}
+Minimum Available: {min(avail)}
+Maximum Available: {max(avail)}
+Average Available: {sum(avail)/len(avail):.2f}
+Average Capacity %: {sum(pct)/len(pct):.2f}%
 """
 
     return summary
@@ -55,3 +55,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
