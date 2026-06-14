@@ -33,48 +33,38 @@ def log(message):
 # DATA COLLECTION
 # -----------------------------
 def collect_parking_data():
-    """
-    Fetch real-time parking availability for Johnson Street Parkade.
-    """
-
     try:
         response = requests.get(PARKING_API_URL, timeout=10)
         response.raise_for_status()
         data = response.json()
 
-        parkade = next(
-            (p for p in data if p.get("name") == TARGET_PARKADE),
-            None
-        )
-
+        parkade = next((p for p in data if p.get("name") == TARGET_PARKADE), None)
         if not parkade:
             raise ValueError(f"{TARGET_PARKADE} not found in API response")
 
-        available = parkade.get("available", None)
-
+        available = parkade.get("available")
         if available is None:
             raise ValueError("API returned no 'available' field")
 
-        capacity_percent = round((available / TOTAL_SPACES) * 100, 2)
+        pct = round((available / TOTAL_SPACES) * 100, 2)
 
-        result = {
-            "location": TARGET_PARKADE,
+        return {
             "timestamp": datetime.now().isoformat(),
-            "available_spaces": available,
+            "available": available,
+            "pct": pct,
+            "location": TARGET_PARKADE,
             "total_spaces": TOTAL_SPACES,
-            "capacity_percent": capacity_percent
+            "error": ""
         }
-
-        return result
 
     except Exception as e:
         return {
-            "location": TARGET_PARKADE,
             "timestamp": datetime.now().isoformat(),
-            "error": str(e),
-            "available_spaces": None,
+            "available": None,
+            "pct": None,
+            "location": TARGET_PARKADE,
             "total_spaces": TOTAL_SPACES,
-            "capacity_percent": None
+            "error": str(e)
         }
 
 # -----------------------------
@@ -106,10 +96,10 @@ def main():
     save_json(data)
     update_excel(data)
 
-    if "error" in data:
+    if data["error"]:
         log(f"ERROR: {data['error']}")
     else:
-        log(f"SUCCESS: {data['available_spaces']} spaces available")
+        log(f"SUCCESS: {data['available']} spaces available")
 
 if __name__ == "__main__":
     main()
