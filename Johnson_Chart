@@ -1,0 +1,60 @@
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+def refresh_mobile_parking_chart(csv_filename='johnson_snapshots.csv', output_image='parking_capacity_combined_mobile.png'):
+    """
+    Reads the latest parking snapshot data and updates the mobile-optimized chart.
+    """
+    # 1. Verification step
+    if not os.path.exists(csv_filename):
+        print(f"Error: Could not find '{csv_filename}'. Make sure the new file is named correctly and uploaded.")
+        return
+
+    # 2. Load and sort the updated data chronologically
+    df = pd.read_csv(csv_filename)
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df = df.sort_values('timestamp').reset_index(drop=True)
+
+    # 3. Initialize the mobile portrait layout (5" wide by 8" tall)
+    fig, ax = plt.subplots(figsize=(5, 8))
+
+    # 4. Plot Occupancy Lines (Color-coded)
+    ax.plot(df['timestamp'], df['general_occupied'], color='#1f77b4', linewidth=2, label='General Occupied')
+    ax.plot(df['timestamp'], df['max3hour_occupied'], color='#ff7f0e', linewidth=2, label='3-Hour Occupied')
+    ax.plot(df['timestamp'], df['accessible_occupied'], color='#2ca02c', linewidth=2, label='Accessible Occupied')
+
+    # 5. Plot Capacity Threshold Lines (Ceilings matching line colors)
+    ax.axhline(y=219, color='#d62728', linestyle='--', linewidth=2, label='Proposed Gen. Cap (219)')
+    ax.axhline(y=238, color='#7f7f7f', linestyle=':', linewidth=1.5, label='Current Gen. Cap (238)')
+    ax.axhline(y=29, color='#ff7f0e', linestyle=':', linewidth=1.2, label='3-Hour Cap (29)')
+    ax.axhline(y=5, color='#2ca02c', linestyle=':', linewidth=1.2, label='Accessible Cap (5)')
+
+    # 6. Axis Labels & Bounds
+    ax.set_ylabel('Number of Spaces Occupied', fontsize=10)
+    ax.set_xlabel('Date (Month-Day)', fontsize=10)
+    ax.set_ylim(0, 260) 
+
+    # 7. Dynamic Date Formatting (Handles newly added dates seamlessly)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+    ax.xaxis.set_major_locator(mdates.DayLocator(interval=1)) 
+    fig.autofmt_xdate(rotation=0, ha='center')
+
+    # 8. Place Legend cleanly at the top 
+    ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.01), frameon=True, fontsize=8, ncol=2)
+
+    # 9. Main Title (Pushed higher to make room for the legend)
+    ax.set_title('Parking Occupancy & Capacity by Type', fontsize=12, fontweight='bold', pad=75)
+
+    # 10. Add grid lines
+    ax.grid(True, linestyle=':', alpha=0.6)
+
+    # Save the high-res graphic for phone viewing
+    plt.tight_layout()
+    plt.savefig(output_image, dpi=300)
+    print(f"🎉 Success! Chart updated with latest data and saved as: '{output_image}'")
+
+# --- HOW TO RUN IT ---
+# Just type this line anytime your dataset updates:
+refresh_mobile_parking_chart()
